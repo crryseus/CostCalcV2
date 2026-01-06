@@ -201,10 +201,14 @@ addLabor();
 window.addEventListener('beforeunload',e=>{if(!isSaved){e.preventDefault();e.returnValue='You have unsaved changes. Do you want to save before leaving?';}});
 
 function saveProject(){
-  const projectName=document.querySelector('input[placeholder="Project Name"]').value||'Woodworking_Project';
-  const data={projectName,timestamp:new Date().toISOString(),materials:document.getElementById('materials').innerHTML,accessories:document.getElementById('accessories').innerHTML,utilities:document.getElementById('utilities').innerHTML};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=projectName.replace(/[^a-z0-9]/gi,'_')+'.json';a.click();isSaved=true;
+  const projectName = document.querySelector('input[placeholder="Project Name"]').value || 'Woodworking_Project';
+  const htmlContent = '<!DOCTYPE html>\n<html>\n' + document.documentElement.innerHTML + '\n</html>';
+  const blob = new Blob([htmlContent], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = projectName.replace(/[^a-z0-9]/gi,'_') + '.html';
+  a.click();
+  isSaved = true;
 }
 
 function exportBOQ(){
@@ -216,4 +220,5 @@ function exportBOQ(){
 </script>
 
 </body>
+
 </html>
