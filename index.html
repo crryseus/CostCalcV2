@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Woodworking Project Costing Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    .toggle { float:right; font-size:0.9em; }
+    .collapsible.collapsed .toggle { transform:rotate(-90deg); }
+    .collapsible h2 { cursor:pointer; }
+    .collapsed .content { display:none; }
+    body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:10px; }
+    h2 { margin-top:30px; }
+    .section { background:#fff; padding:15px; border-radius:8px; margin-bottom:15px; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:6px; border-bottom:1px solid #ddd; text-align:left; }
+    input, select { width:100%; padding:5px; }
+    button { padding:6px 10px; margin-top:5px; cursor:pointer; }
+    .right { text-align:right; }
+    .total-box { font-size:1.2em; font-weight:bold; }
+    .highlight { background:#e8f5e9; }
+    .danger { background:#fff3e0; }
+    @media print {
+      body * { visibility: hidden; }
+      #boq, #boq * { visibility: visible; }
+      #boq { position: absolute; left: 0; top: 0; width:100%; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Project Costing – Woodworking</h1>
+<button onclick="exportBOQ()">Export BOQ to PDF</button>
+<button onclick="saveProject()">Save Project</button>
+
+<div class="section">
+  <h2>Project Information</h2>
+  <input placeholder="Project Name">
+  <input placeholder="Client Name">
+  <input placeholder="Project Location">
+</div>
+
+<div class="section highlight">
+  <h2>Summary of Costs</h2>
+  <table>
+    <tr><td>Materials:</td><td class="right">₱<span id="sumMaterials">0.00</span></td></tr>
+    <tr><td>Accessories:</td><td class="right">₱<span id="sumAccessories">0.00</span></td></tr>
+    <tr><td>Utilities:</td><td class="right">₱<span id="sumUtilities">0.00</span></td></tr>
+    <tr><td>Logistics:</td><td class="right">₱<span id="sumLogistics">0.00</span></td></tr>
+    <tr><td>Labor:</td><td class="right">₱<span id="sumLabor">0.00</span></td></tr>
+    <tr><td>Contingency / Emergency:</td><td class="right">₱<span id="sumContingency">0.00</span></td></tr>
+    <tr><td>Markup:</td><td class="right">₱<span id="sumMarkup">0.00</span></td></tr>
+    <tr><td><strong>Total Project Cost:</strong></td><td class="right"><strong>₱<span id="sumTotal">0.00</span></strong></td></tr>
+  </table>
+</div>
+
+<!-- MATERIALS -->
+<div class="section collapsible">
+  <h2 onclick="this.parentElement.classList.toggle('collapsed')">Materials <span class="toggle">▼</span></h2>
+  <div class="content">
+    <div><strong>Materials Subtotal: ₱<span id="materialsSub">0.00</span></strong></div>
+    <table id="materials">
+      <tr><th>Use</th><th>Name</th><th>Unit</th><th>Cost / Unit</th><th>Qty</th><th>Subtotal</th><th></th></tr>
+    </table>
+    <button onclick="addMaterial()">+ Add Material</button>
+  </div>
+</div>
+
+<!-- ACCESSORIES -->
+<div class="section collapsible">
+  <h2 onclick="this.parentElement.classList.toggle('collapsed')">Accessories <span class="toggle">▼</span></h2>
+  <div class="content">
+    <div><strong>Accessories Subtotal: ₱<span id="accessoriesSub">0.00</span></strong></div>
+    <table id="accessories">
+      <tr><th>Use</th><th>Name</th><th>Unit</th><th>Cost / Unit</th><th>Qty</th><th>Subtotal</th><th></th></tr>
+    </table>
+    <button onclick="addAccessory()">+ Add Accessory</button>
+  </div>
+</div>
+
+<!-- UTILITIES -->
+<div class="section collapsible">
+  <h2 onclick="this.parentElement.classList.toggle('collapsed')">Utilities <span class="toggle">▼</span></h2>
+  <div class="content">
+    <div><strong>Utilities Subtotal: ₱<span id="utilitiesSub">0.00</span></strong></div>
+    <table id="utilities">
+      <tr><th>Use</th><th>Name</th><th>Unit</th><th>Cost / Unit</th><th>Qty</th><th>Subtotal</th><th></th></tr>
+    </table>
+    <button onclick="addUtility()">+ Add Utility</button>
+  </div>
+</div>
+
+<!-- BOQ -->
+<div class="section">
+  <h2>Bill of Quantities (BOQ)</h2>
+  <table id="boq">
+    <tr><th>Category</th><th>Name</th><th>Unit</th><th>Total Qty</th></tr>
+  </table>
+</div>
+
+<!-- LOGISTICS -->
+<div class="section">
+  <h2>Logistics</h2>
+  <div><strong>Logistics Subtotal: ₱<span id="logisticsSub">0.00</span></strong></div>
+  Distance (km): <input id="distance" type="number" value="0"><br>
+  Cost per km: <input id="costPerKm" type="number" value="0"><br>
+  Deliveries: <input id="deliveries" type="number" value="1"><br>
+  Toll Fees: <input id="toll" type="number" value="0"><br>
+  Helper Fee: <input id="helper" type="number" value="0"><br>
+</div>
+
+<!-- LABOR -->
+<div class="section">
+  <h2>Labor</h2>
+  <div><strong>Labor Subtotal: ₱<span id="laborSub">0.00</span></strong></div>
+  <select id="laborMode">
+    <option value="percent">% of Subtotal</option>
+    <option value="unit">Per Unit</option>
+  </select>
+  <input id="laborPercent" type="number" placeholder="Labor %">
+  <table id="laborTable">
+    <tr><th>Type</th><th>Rate</th><th>Qty</th><th>Subtotal</th><th></th></tr>
+  </table>
+  <button onclick="addLabor()">+ Add Labor</button>
+</div>
+
+<!-- CONTINGENCY -->
+<div class="section danger">
+  <h2>Contingency / Emergency</h2>
+  <div><strong>Contingency Subtotal: ₱<span id="contingencySub">0.00</span></strong></div>
+  <input id="contingency" type="number" placeholder="% Buffer">
+</div>
+
+<!-- MARKUP -->
+<div class="section highlight">
+  <h2>Markup & Summary</h2>
+  <div><strong>Project Subtotal (Before Contingency & Markup): ₱<span id="projectSub">0.00</span></strong></div>
+  Markup %: <input id="markup" type="number"><br><br>
+  <div class="total-box">Final Project Cost: ₱<span id="final">0.00</span></div>
+</div>
+
+<script>
+let isSaved=true;
+
+function saveTemplates(){
+  localStorage.setItem('materialsTemplate',document.getElementById('materials').innerHTML);
+  localStorage.setItem('accessoriesTemplate',document.getElementById('accessories').innerHTML);
+  localStorage.setItem('utilitiesTemplate',document.getElementById('utilities').innerHTML);
+}
+function loadTemplates(){
+  if(localStorage.getItem('materialsTemplate')) document.getElementById('materials').innerHTML=localStorage.getItem('materialsTemplate');
+  if(localStorage.getItem('accessoriesTemplate')) document.getElementById('accessories').innerHTML=localStorage.getItem('accessoriesTemplate');
+  if(localStorage.getItem('utilitiesTemplate')) document.getElementById('utilities').innerHTML=localStorage.getItem('utilitiesTemplate');
+}
+
+function addMaterial(){const t=document.getElementById('materials');t.insertAdjacentHTML('beforeend',`<tr><td><input type='checkbox' checked></td><td><input></td><td><input></td><td><input type='number'></td><td><input type='number'></td><td class='right'>0</td><td><button onclick='this.parentElement.parentElement.remove();saveTemplates()'>X</button></td></tr>`);saveTemplates();}
+function addAccessory(){const t=document.getElementById('accessories');t.insertAdjacentHTML('beforeend',`<tr><td><input type='checkbox' checked></td><td><input></td><td><input></td><td><input type='number'></td><td><input type='number'></td><td class='right'>0</td><td><button onclick='this.parentElement.parentElement.remove();saveTemplates()'>X</button></td></tr>`);saveTemplates();}
+function addUtility(){const t=document.getElementById('utilities');t.insertAdjacentHTML('beforeend',`<tr><td><input type='checkbox' checked></td><td><input></td><td><input></td><td><input type='number'></td><td><input type='number'></td><td class='right'>0</td><td><button onclick='this.parentElement.parentElement.remove();saveTemplates()'>X</button></td></tr>`);saveTemplates();}
+function addLabor(){const t=document.getElementById('laborTable');t.insertAdjacentHTML('beforeend',`<tr><td><select><option>Cabinet (lm)</option><option>Stone (sqm)</option></select></td><td><input type='number'></td><td><input type='number'></td><td class='right'>0</td><td><button onclick='this.parentElement.parentElement.remove()'>X</button></td></tr>`);}
+
+function calculateTotals(){
+  let materialsTotal=0,accessoriesTotal=0,utilitiesTotal=0,logisticsTotal=0,laborTotal=0,contingencyTotal=0;
+  const boq=document.getElementById('boq');
+  boq.innerHTML='<tr><th>Category</th><th>Name</th><th>Unit</th><th>Total Qty</th></tr>';
+  document.querySelectorAll('#materials tr').forEach((r,i)=>{if(i>0){const use=r.cells[0].querySelector('input').checked;const name=r.cells[1].querySelector('input').value;const unit=r.cells[2].querySelector('input').value;const cost=+r.cells[3].querySelector('input').value||0;const qty=+r.cells[4].querySelector('input').value||0;const sub=use?cost*qty:0;r.cells[5].innerText=sub.toFixed(2);if(use&&name) boq.insertAdjacentHTML('beforeend',`<tr><td>Material</td><td>${name}</td><td>${unit}</td><td>${qty}</td></tr>`);materialsTotal+=sub;}});
+  document.querySelectorAll('#accessories tr').forEach((r,i)=>{if(i>0){const use=r.cells[0].querySelector('input').checked;const name=r.cells[1].querySelector('input').value;const unit=r.cells[2].querySelector('input').value||'pcs';const cost=+r.cells[3].querySelector('input').value||0;const qty=+r.cells[4].querySelector('input').value||0;const sub=use?cost*qty:0;r.cells[5].innerText=sub.toFixed(2);if(use&&name) boq.insertAdjacentHTML('beforeend',`<tr><td>Accessory</td><td>${name}</td><td>${unit}</td><td>${qty}</td></tr>`);accessoriesTotal+=sub;}});
+  logisticsTotal=(+distance.value||0)*(+costPerKm.value||0)*(+deliveries.value||1)+(+toll.value||0)+(+helper.value||0);
+  document.getElementById('logisticsSub').innerText=logisticsTotal.toFixed(2);
+  document.querySelectorAll('#utilities tr').forEach((r,i)=>{if(i>0){const use=r.cells[0].querySelector('input').checked;const cost=+r.cells[3].querySelector('input')?.value||+r.cells[3].innerText||0;const qty=+r.cells[4].querySelector('input')?.value||+r.cells[4].innerText||0;const sub=use?cost*qty:0;r.cells[5].innerText=sub.toFixed(2);utilitiesTotal+=sub;}});
+  if(laborMode.value==='percent') laborTotal=(materialsTotal+accessoriesTotal+utilitiesTotal+logisticsTotal)*(+laborPercent.value||0)/100;
+  else document.querySelectorAll('#laborTable tr').forEach((r,i)=>{if(i>0){const rate=+r.cells[1].querySelector('input').value||0;const qty=+r.cells[2].querySelector('input').value||0;const sub=rate*qty;r.cells[3].innerText=sub.toFixed(2);laborTotal+=sub;}});
+  contingencyTotal=(materialsTotal+accessoriesTotal+utilitiesTotal+logisticsTotal+laborTotal)*(+contingency.value||0)/100;
+  const preMarkup=materialsTotal+accessoriesTotal+utilitiesTotal+logisticsTotal+laborTotal+contingencyTotal;
+  const finalTotal=preMarkup*(1+(+markup.value||0)/100);
+
+  document.getElementById('materialsSub').innerText=materialsTotal.toFixed(2);
+  document.getElementById('accessoriesSub').innerText=accessoriesTotal.toFixed(2);
+  document.getElementById('utilitiesSub').innerText=utilitiesTotal.toFixed(2);
+  document.getElementById('laborSub').innerText=laborTotal.toFixed(2);
+  document.getElementById('contingencySub').innerText=contingencyTotal.toFixed(2);
+  document.getElementById('projectSub').innerText=preMarkup.toFixed(2);
+  document.getElementById('final').innerText=finalTotal.toFixed(2);
+
+  document.getElementById('sumMaterials').innerText=materialsTotal.toFixed(2);
+  document.getElementById('sumAccessories').innerText=accessoriesTotal.toFixed(2);
+  document.getElementById('sumUtilities').innerText=utilitiesTotal.toFixed(2);
+  document.getElementById('sumLogistics').innerText=logisticsTotal.toFixed(2);
+  document.getElementById('sumLabor').innerText=laborTotal.toFixed(2);
+  document.getElementById('sumContingency').innerText=contingencyTotal.toFixed(2);
+  document.getElementById('sumMarkup').innerText=(finalTotal-preMarkup).toFixed(2);
+  document.getElementById('sumTotal').innerText=finalTotal.toFixed(2);
+}
+
+setInterval(calculateTotals,500);
+loadTemplates();
+if(document.querySelectorAll('#materials tr').length===1) addMaterial();
+if(document.querySelectorAll('#accessories tr').length===1) addAccessory();
+if(document.querySelectorAll('#utilities tr').length===1) addUtility();
+addLabor();
+
+window.addEventListener('beforeunload',e=>{if(!isSaved){e.preventDefault();e.returnValue='You have unsaved changes. Do you want to save before leaving?';}});
+
+function saveProject(){
+  const projectName=document.querySelector('input[placeholder="Project Name"]').value||'Woodworking_Project';
+  const data={projectName,timestamp:new Date().toISOString(),materials:document.getElementById('materials').innerHTML,accessories:document.getElementById('accessories').innerHTML,utilities:document.getElementById('utilities').innerHTML};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=projectName.replace(/[^a-z0-9]/gi,'_')+'.json';a.click();isSaved=true;
+}
+
+function exportBOQ(){
+  const boqSection=document.getElementById('boq').outerHTML;
+  const win=window.open('','','width=800,height=600');
+  win.document.write('<html><head><title>Bill of Quantities</title></head><body>'+boqSection+'</body></html>');
+  win.document.close();win.focus();win.print();win.close();
+}
+</script>
+
+</body>
+</html>
